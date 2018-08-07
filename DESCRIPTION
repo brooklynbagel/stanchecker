@@ -1,0 +1,15 @@
+Package: stanchecker
+Title: Checks that Stan Code will Compile
+Version: 0.0.0.9000
+Authors@R: person("Michael", "Beigelmacher",
+                  email = "brooklynbagel@gmail.com", 
+                  role = c("aut", "cre"))
+Description: Checks that copied Stan code will compile.
+License: MIT + file LICENSE
+Imports: 
+    rstan,
+    rstudioapi
+ByteCompile: true
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.0

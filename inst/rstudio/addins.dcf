@@ -1,0 +1,4 @@
+Name: Check Stan syntax
+Description: Checks that a copied bit of Stan code compiles
+Binding: check_stan_syntax
+Interactive: false
