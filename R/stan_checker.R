@@ -1,5 +1,5 @@
 check_stan_syntax <- function() {
-  ctx <- rstudioapi::getActiveDocumentContext()
+  ctx <- rstudioapi::getSourceEditorContext()
   text <- rstudioapi::primary_selection(ctx)$text
 
   fp <- tempfile()
