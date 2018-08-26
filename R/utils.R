@@ -8,3 +8,11 @@ detect_code_chunks <- function(x) {
   rownames(chunks) <- NULL
   chunks
 }
+
+detect_stan_chunks <- function(x) {
+  code_chunks <- detect_code_chunks(x)
+  stan_chunks <- stringr::str_which(x[code_chunks$begin], "```\\{stan")
+  stan_chunks <- code_chunks[stan_chunks, ]
+  rownames(stan_chunks) <- NULL
+  stan_chunks
+}
