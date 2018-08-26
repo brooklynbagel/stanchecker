@@ -7,8 +7,12 @@ Authors@R: person("Michael", "Beigelmacher",
 Description: Checks that copied Stan code will compile.
 License: MIT + file LICENSE
 Imports: 
+    knitr,
     rstan,
-    rstudioapi
+    rstudioapi,
+    stringr
+Suggests: 
+    testthat
 ByteCompile: true
 Encoding: UTF-8
 LazyData: true

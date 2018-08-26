@@ -1,0 +1,129 @@
+---
+title: "Getting Started with RStan"
+output: html_document
+---
+
+This example is taken from [RStan](https://github.com/stan-dev/rstan) wiki page on [getting started](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started).
+
+# Loading the package
+
+```{r load-rstan}
+library(rstan) # observe startup messages
+```
+
+As the startup message says, if you are using rstan locally on a multicore machine and have plenty of RAM to estimate your model in parallel, at this point execute
+
+```{r rstan-opts}
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+These options respectively allow you to automatically save a bare version of a compiled Stan program to the hard disk so that it does not need to be recompiled and to execute multiple Markov chains in parallel.
+
+# Example: Eight Schools
+
+This is an example in Section 5.5 of Gelman et al (2003), which studied coaching effects from eight schools. For simplicity, we call this example "eight schools." Again this example be found on the [wiki](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started#example-1-eight-schools).
+
+## Model Definition
+
+We start by writing a Stan program for the model and loading it into an R object `eight_schools`.
+
+```{stan stan-model, output.var="eight_schools"}
+// saved as eight_schools
+data {
+  int<lower=0> J; // number of schools 
+  real y[J]; // estimated treatment effects
+  real<lower=0> sigma[J]; // s.e. of effect estimates 
+}
+parameters {
+  real mu; 
+  real<lower=0> tau;
+  real eta[J];
+}
+transformed parameters {
+  real theta[J];
+  for (j in 1:J)
+    theta[j] = mu + tau * eta[j];
+}
+model {
+  target += normal_lpdf(eta | 0, 1);
+  target += normal_lpdf(y | theta, sigma);
+}
+```
+
+## Model Parameters
+
+In this model, we let $\theta$ be transformed parameters of $\mu$ and $\eta$ instead of directly declaring 
+$\theta$ as parameters. By parameterizing this way, the sampler will run more efficiently ([see detailed explanation](http://mc-stan.org/documentation/case-studies/divergences_and_bias.html)). We can prepare the data with:
+
+```{r schools-dat}
+schools_dat <- list(J = 8, 
+                    y = c(28,  8, -3,  7, -1,  1, 18, 12),
+                    sigma = c(15, 10, 16, 11,  9, 11, 10, 18))
+```
+
+## Fit Model
+
+And we can get a fit with the following R command. Note that the argument to `object =` should point the stanmodel created in your previous stan chunk.
+
+```{r fit-model}
+fit <- sampling(eight_schools, data = schools_dat, 
+                iter = 1000, chains = 4)
+```
+
+
+The object `fit`, returned from function `sampling` is an S4 object of class `stanfit`. Methods such as `print`, `plot`, and `pairs` are associated with the fitted result so we can use the following code to check out the results in `fit`. `print` provides a summary for the parameter of the model as well as the log-posterior with name `lp__` (see the following example output). For more methods and details of class `stanfit`, see the help of class `stanfit`.
+
+In particular, we can use `extract` function on `stanfit` objects to obtain the samples. `extract` extracts samples from the `stanfit` object as a list of arrays for parameters of interest, or just an array. In addition, S3 functions as.array, as.matrix, and as.data.frame are defined for `stanfit` object (using `help("as.array.stanfit")` to check out the help document in R).
+
+```{r}
+print(fit)
+```
+
+```
+Inference for Stan model: stan-550f4bcac572.
+4 chains, each with iter=1000; warmup=500; thin=1; 
+post-warmup draws per chain=500, total post-warmup draws=2000.
+
+           mean se_mean   sd   2.5%    25%    50%    75%  97.5% n_eff Rhat
+mu         7.92    0.13 5.01  -1.87   4.72   7.82  11.20  18.16  1478    1
+tau        6.42    0.18 5.31   0.17   2.43   5.23   8.98  20.27   845    1
+eta[1]     0.34    0.02 0.94  -1.66  -0.28   0.36   0.99   2.11  2000    1
+eta[2]    -0.02    0.02 0.87  -1.79  -0.58  -0.01   0.51   1.75  2000    1
+eta[3]    -0.19    0.02 0.89  -1.88  -0.80  -0.22   0.43   1.53  2000    1
+eta[4]    -0.05    0.02 0.89  -1.79  -0.63  -0.05   0.54   1.70  2000    1
+eta[5]    -0.35    0.02 0.86  -2.06  -0.91  -0.38   0.18   1.46  1660    1
+eta[6]    -0.21    0.02 0.91  -1.96  -0.79  -0.23   0.40   1.68  2000    1
+eta[7]     0.36    0.02 0.91  -1.49  -0.22   0.37   0.96   2.14  2000    1
+eta[8]     0.06    0.02 0.94  -1.82  -0.57   0.06   0.69   1.90  2000    1
+theta[1]  11.12    0.21 7.97  -2.04   6.11  10.16  14.84  30.81  1491    1
+theta[2]   7.77    0.14 6.33  -5.74   4.00   7.72  11.70  20.24  2000    1
+theta[3]   6.31    0.16 7.24 -10.79   2.50   6.90  10.72  18.68  2000    1
+theta[4]   7.69    0.14 6.37  -4.84   3.81   7.76  11.49  20.45  2000    1
+theta[5]   5.29    0.14 6.43  -9.19   1.49   5.77   9.53  16.78  2000    1
+theta[6]   6.23    0.15 6.70  -8.74   2.24   6.67  10.70  18.26  2000    1
+theta[7]  10.65    0.15 6.55  -1.10   6.39  10.19  14.64  25.10  2000    1
+theta[8]   8.40    0.18 7.65  -6.80   3.97   8.17  12.60  24.53  1816    1
+lp__     -39.55    0.11 2.77 -45.52 -41.16 -39.30 -37.49 -35.04   638    1
+
+Samples were drawn using NUTS(diag_e) at Sat Aug 25 22:08:50 2018.
+For each parameter, n_eff is a crude measure of effective sample size,
+and Rhat is the potential scale reduction factor on split chains (at 
+convergence, Rhat=1).
+```
+
+```{r}
+plot(fit)
+pairs(fit, pars = c("mu", "tau", "lp__"))
+
+la <- extract(fit, permuted = TRUE) # return a list of arrays 
+mu <- la$mu 
+
+### return an array of three dimensions: iterations, chains, parameters 
+a <- extract(fit, permuted = FALSE) 
+
+### use S3 functions on stanfit objects
+a2 <- as.array(fit)
+m <- as.matrix(fit)
+d <- as.data.frame(fit)
+```
