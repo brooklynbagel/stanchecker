@@ -3,3 +3,4 @@
 ^LICENSE\.md
 ^TODO.md
 ^\.travis\.yml$
+^codecov\.yml$

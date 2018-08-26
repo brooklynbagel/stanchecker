@@ -1,4 +1,5 @@
 [![Travis build status](https://travis-ci.org/brooklynbagel/stanchecker.svg?branch=master)](https://travis-ci.org/brooklynbagel/stanchecker)
+[![Coverage status](https://codecov.io/gh/brooklynbagel/stanchecker/branch/master/graph/badge.svg)](https://codecov.io/github/brooklynbagel/stanchecker?branch=master)
 
 # stanchecker
 
